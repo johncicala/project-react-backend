@@ -3,6 +3,9 @@ const cors = require("cors");
 const app = express();
 app.use(cors()); 
 app.use(express.static("public"));
+const Joi = require("joi");
+app.use(express.json()); 
+
 
 
 app.get('/', (req, res)=>{
@@ -149,18 +152,29 @@ app.get("/api/drinkItems", (req, res) => {
     res.send(drinkItems);
 })
 
+let reviews = [
+  { name: "John Doe", review: "Great food and top notch service!" },
+  { name: "Jane Smith", review: "Fantastic atmosphere, long wait times." }
+];
+
+const reviewSchema = Joi.object({
+  name: Joi.string().min(3).max(50).required(),
+  review: Joi.string().min(5).max(500).required(),
+});
+
 app.get("/api/reviews", (req, res) => {
-  const reviews = [
-    {
-      name: "John Doe",
-      review: "The food was amazing, and the service was top-notch!",
-    },
-    {
-      name: "Jane Smith",
-      review: "Loved the atmosphere, but the wait time was a bit long.",
-    },
-  ];
   res.send(reviews);
+});
+
+app.post("/api/reviews", (req, res) => {
+  const { error } = reviewSchema.validate(req.body);
+  if (error) {
+      return res.status(400).send({ error: error.details[0].message });
+  }
+
+  const newReview = { name: req.body.name, review: req.body.review };
+  reviews.push(newReview);
+  res.send({ message: "Review added successfully", newReview });
 });
 
 app.listen(3000, () => {
