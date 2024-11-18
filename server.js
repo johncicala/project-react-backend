@@ -149,6 +149,22 @@ app.get("/api/drinkItems", (req, res) => {
     res.send(drinkItems);
 })
 
+app.get("/api/reviews", (req, res) => {
+  const reviews = [
+    {
+      _id: 1,
+      name: "John Doe",
+      review: "The food was amazing, and the service was top-notch!",
+    },
+    {
+      _id: 2,
+      name: "Jane Smith",
+      review: "Loved the atmosphere, but the wait time was a bit long.",
+    },
+  ];
+  res.send(reviews);
+});
+
 app.listen(3000, () => {
     console.log("im listening");
 });
