@@ -181,6 +181,36 @@ app.post("/api/reviews", (req, res) => {
   res.send({ message: "Review added successfully", newReview });
 });
 
+app.put("/api/reviews/:id", (req, res) => {
+  const { error } = reviewSchema.validate(req.body);
+  if (error) {
+    return res.status(400).send({ error: error.details[0].message });
+  }
+
+  const reviewId = parseInt(req.params.id);
+  const reviewIndex = reviews.findIndex((r) => r._id === reviewId);
+
+  if (reviewIndex === -1) {
+    return res.status(404).send({ error: "Review not found." });
+  }
+
+  reviews[reviewIndex] = { _id: reviewId, ...req.body };
+  res.send({ message: "Review updated successfully", updatedReview: reviews[reviewIndex] });
+});
+
+app.delete("/api/reviews/:id", (req, res) => {
+  const reviewId = parseInt(req.params.id);
+  const reviewIndex = reviews.findIndex((r) => r._id === reviewId);
+
+  if (reviewIndex === -1) {
+    return res.status(404).send({ error: "Review not found." });
+  }
+
+  const deletedReview = reviews.splice(reviewIndex, 1);
+  res.send({ message: "Review deleted successfully", deletedReview });
+});
+
+
 app.listen(3000, () => {
     console.log("im listening");
 });
