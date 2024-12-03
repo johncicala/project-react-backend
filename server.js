@@ -153,8 +153,8 @@ app.get("/api/drinkItems", (req, res) => {
 })
 
 let reviews = [
-  { name: "John Doe", review: "Great food and top notch service!" },
-  { name: "Jane Smith", review: "Fantastic atmosphere, long wait times." }
+  { "_id": 1, name: "John Doe", review: "Great food and top notch service!"},
+  { "_id": 2, name: "Jane Smith", review: "Fantastic atmosphere, long wait times."}
 ];
 
 const reviewSchema = Joi.object({
@@ -172,7 +172,11 @@ app.post("/api/reviews", (req, res) => {
       return res.status(400).send({ error: error.details[0].message });
   }
 
-  const newReview = { name: req.body.name, review: req.body.review };
+  const maxId = reviews.length > 0 ? Math.max(...reviews.map(review => review._id)) : 0;
+  const newId = maxId + 1;
+
+  const newReview = { _id: newId, name: req.body.name, review: req.body.review };
+  
   reviews.push(newReview);
   res.send({ message: "Review added successfully", newReview });
 });
