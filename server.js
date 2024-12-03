@@ -162,29 +162,6 @@ const reviewSchema = Joi.object({
   review: Joi.string().min(5).max(500).required(),
 });
 
-// new
-app.put("/api/reviews/:id", (req, res) => {
-  const { error } = reviewSchema.validate(req.body);
-  if (error) return res.status(400).send({ error: error.details[0].message });
-
-  const review = reviews.find((r) => r.id === parseInt(req.params.id));
-  if (!review) return res.status(404).send({ error: "Review not found" });
-
-  review.name = req.body.name;
-  review.review = req.body.review;
-
-  res.send({ message: "Review updated successfully", review });
-});
-
-// new
-app.delete("/api/reviews/:id", (req, res) => {
-  const reviewIndex = reviews.findIndex((r) => r.id === parseInt(req.params.id));
-  if (reviewIndex === -1) return res.status(404).send({ error: "Review not found" });
-
-  const deletedReview = reviews.splice(reviewIndex, 1);
-  res.send({ message: "Review deleted successfully", deletedReview });
-});
-
 app.get("/api/reviews", (req, res) => {
   res.send(reviews);
 });
