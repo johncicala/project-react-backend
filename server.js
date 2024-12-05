@@ -6,8 +6,6 @@ app.use(express.static("public"));
 const Joi = require("joi");
 app.use(express.json()); 
 const mongoose = require("mongoose");
-const multer = require("multer");
-const path = require("path");
 
 
 app.get('/', (req, res)=>{
@@ -212,53 +210,38 @@ app.delete("/api/reviews/:id", (req, res) => {
   res.send({ message: "Review deleted successfully", deletedReview });
 });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-      cb(null, 'uploads/'); 
-  },
-  filename: (req, file, cb) => {
-      cb(null, Date.now() + path.extname(file.originalname)); 
-  }
-});
-
-const upload = multer({ storage: storage });
-
 mongoose.connect("mongodb+srv://johncic:0B6XV6Xvzf7nNFFr@cluster0.1gs5k.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
-useNewUrlParser: true,
-useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
 .then(() => console.log("MongoDB connected successfully"))
 .catch(err => console.error("Error connecting to MongoDB:", err));
 
 const reviewSchema2 = new mongoose.Schema({
-  name: { type: String, required: true, minlength: 3, maxlength: 50 },
-  review: { type: String, required: true, minlength: 5, maxlength: 500 },
-  image: { type: String }, // Add image field to the schema
+    name: { type: String, required: true, minlength: 3, maxlength: 50 },
+    review: { type: String, required: true, minlength: 5, maxlength: 500 },
 });
 
 const Review = mongoose.model("Review", reviewSchema2);
 
 app.get("/api/reviews", async (req, res) => {
   try {
-      const reviews = await Review.find();
+      const reviews = await Review.find(); 
       res.send(reviews);
   } catch (error) {
       res.status(500).send({ error: "Failed to fetch reviews." });
   }
 });
 
-app.post("/api/reviews", upload.single('image'), async (req, res) => {
-  const { name, review } = req.body;
-  let imageUrl = null;
-
-  if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`; 
+app.post("/api/reviews", async (req, res) => {
+  const { error } = reviewSchema2.validate(req.body);
+  if (error) {
+      return res.status(400).send({ error: error.details[0].message });
   }
 
-  const newReview = new Review({ name, review, image: imageUrl });
-
   try {
-      await newReview.save();
+      const newReview = new Review(req.body); 
+      await newReview.save(); 
       res.send({ message: "Review added successfully", newReview });
   } catch (error) {
       res.status(500).send({ error: "Failed to add review." });
@@ -266,11 +249,15 @@ app.post("/api/reviews", upload.single('image'), async (req, res) => {
 });
 
 app.put("/api/reviews/:id", async (req, res) => {
-  const { name, review } = req.body;
+  const { error } = reviewSchema2.validate(req.body);
+  if (error) {
+      return res.status(400).send({ error: error.details[0].message });
+  }
+
   try {
       const updatedReview = await Review.findByIdAndUpdate(
           req.params.id,
-          { name, review },
+          req.body,
           { new: true, runValidators: true }
       );
       if (!updatedReview) return res.status(404).send({ error: "Review not found." });
@@ -289,8 +276,6 @@ app.delete("/api/reviews/:id", async (req, res) => {
       res.status(500).send({ error: "Failed to delete review." });
   }
 });
-
-app.use('/uploads', express.static('uploads'));
 
 
 app.listen(3000, () => {
